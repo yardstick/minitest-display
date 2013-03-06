@@ -23,6 +23,7 @@ module MiniTest
     class << self
       def options
         @options ||= {
+          :fail_fast => false,
           :suite_names => true,
           :suite_divider => " | ",
           :suite_time => true,
@@ -201,6 +202,14 @@ class MiniTest::Unit
         wrap_count = wrap_at
       end
 
+      if display.options[:fail_fast]
+        case result
+        when 'F', 'E'
+          print "\nFailing fast!"
+          exit 1
+        end
+      end
+
       inst._assertions
     }
 
@@ -234,7 +243,7 @@ class MiniTest::Unit
   end
 
   def display_slow_suites
-    times = @test_times.map { |suite, tests| [suite, tests.map(&:last).sum] }.sort { |a, b| b[1] <=> a[1] }
+    times = @test_times.map { |suite, tests| [suite, tests.reduce(0) { |sum, a| sum + a.last }] }.sort { |a, b| b[1] <=> a[1] }
     puts "Slowest suites:"
     times[0..display.options[:output_slow_suites].to_i].each do |suite, time|
       puts "%.2f s\t#{suite}" % time
