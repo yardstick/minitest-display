@@ -133,7 +133,7 @@ class MiniTest::Unit
     sync = output.respond_to? :"sync=" # stupid emacs
     old_sync, output.sync = output.sync, true if sync
 
-    results = _run_suites suites, type
+    results = _run_suites(suites, type)
 
     @test_count      = results.inject(0) { |sum, (tc, _)| sum + tc }
     @assertion_count = results.inject(0) { |sum, (_, ac)| sum + ac }
@@ -156,6 +156,16 @@ class MiniTest::Unit
     status
   end
 
+  def _run_suites(suites, type)
+    failing = false
+    suites.map do |suite|
+      next if failing
+      failed, size, sum = _run_suite(suite, type)
+      failing = failed && display.options[:fail_fast]
+      [size, sum]
+    end.compact
+  end
+
   def _run_suite(suite, type)
     suite_header = ""
     if display.options[:suite_names] && display.printable_suite?(suite)
@@ -169,9 +179,12 @@ class MiniTest::Unit
     wrap_at = display.options[:wrap_at] - suite_header.length
     wrap_count = wrap_at
 
+    failing = false
+
     full_start_time = Time.now
     @test_times ||= Hash.new { |h, k| h[k] = [] }
     assertions = suite.send("#{type}_methods").grep(filter).map { |method|
+      next if failing
       inst = suite.new method
       inst._assertions = 0
 
@@ -205,13 +218,12 @@ class MiniTest::Unit
       if display.options[:fail_fast]
         case result
         when 'F', 'E'
-          print "\nFailing fast!"
-          exit 1
+          failing = true
         end
       end
 
       inst._assertions
-    }
+    }.compact
 
     total_time = Time.now - full_start_time
 
@@ -219,7 +231,7 @@ class MiniTest::Unit
       print "\n#{' ' * suite_header.length}#{display.options[:suite_divider]}"
       print "%.2f s" % total_time
     end
-    return assertions.size, assertions.inject(0) { |sum, n| sum + n }
+    return failing, assertions.size, assertions.inject(0) { |sum, n| sum + n }
   end
 
   def status(io = self.output)
