@@ -10,11 +10,12 @@ end
 require 'rake'
 
 require File.join(File.dirname(__FILE__), 'lib', 'minitest', 'display')
+puts "Minitest::Display loaded with VERSION: #{Minitest::Display::VERSION}"
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "minitest-display"
-  gem.version = MiniTest::Display::VERSION
+  gem.version = Minitest::Display::VERSION
   gem.homepage = "http://github.com/quirkey/minitest-display"
   gem.license = "MIT"
   gem.summary = %Q{Patches MiniTest to allow for an easily configurable output. For Ruby 1.9 :D}

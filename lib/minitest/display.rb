@@ -22,16 +22,17 @@ module Minitest
   module Display
     VERSION = '0.3.1'
 
+    @recorders = []
     class << self
-      def initialize
-        @recorders = []
-      end
+      # def initialize
+      # end
 
-      # An array of all the registered MiniTest::Display recorders
-      attr_reader @recorders
+      # An array of all the registered Minitest::Display recorders
+      attr_reader :recorders
 
       def options
         @options ||= {
+          :fail_fast => false,
           :suite_names => true,
           :suite_divider => " | ",
           :suite_time => true,
@@ -114,8 +115,8 @@ module Minitest
               ActiveRecord::TestCase
               ActiveSupport::TestCase
               Test::Unit::TestCase
-              MiniTest::Unit::TestCase
-              MiniTest::Spec}
+              Minitest::Unit::TestCase
+              Minitest::Spec}
 
       def printable_suite?(suite)
         !DONT_PRINT_CLASSES.include?(suite.to_s)
@@ -147,6 +148,9 @@ module Minitest
         @total_errors = 0
         @total_failures = 0
         @total_tests = 0
+        @fail_fast = display.options[:fail_fast]
+        @failing = false
+        @stop_tests = false # Flag to indicate when to stop tests
       end
 
       def record_suite_started(suite)
@@ -210,9 +214,22 @@ module Minitest
           @wrap_count = @wrap_at
         end
 
+        if display.options[:fail_fast] && (result.error? || result.failure)
+          @stop_tests = true # Set the flag to stop tests
+        end
+
         run_recorder_method(:record, suite, result.name, result.assertions, result.time, result.failure)
         @test_times[suite] << ["#{suite}##{result.name}", result.time]
         @current_suite = suite
+
+        # Stop further tests if the flag is set
+        if @stop_tests
+          puts "\nStopped tests due to failure, because of fail_fast option"
+          report
+          # skip the current suite
+          @current_suite = nil
+          return
+        end
       end
 
       def display_slow_tests

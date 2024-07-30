@@ -56,4 +56,3 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<jeweler>, ["~> 1.5"])
   end
 end
-

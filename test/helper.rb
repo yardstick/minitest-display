@@ -12,7 +12,7 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
 # Init the plugin
-Minitest.extensions = ["display"] 
+Minitest.extensions = ["display"]
 require "minitest/display_plugin"
 
 $print_runs = ENV['DEBUG']
@@ -29,7 +29,7 @@ class Minitest::Test
     header = %{
       require 'minitest/autorun'
       $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-      Minitest.extensions = ["display"] 
+      Minitest.extensions = ["display"]
       require "#{lib_dir}/minitest/display_plugin"
     }
 
@@ -56,7 +56,7 @@ class Minitest::Test
 
   def assert_no_output(duck)
     if duck.is_a? Regexp
-      assert_no_match duck, strip_color(suite_output)
+      refute_match duck, strip_color(suite_output)
     else
       assert ! strip_color(suite_output).include?(duck.to_s)
     end
